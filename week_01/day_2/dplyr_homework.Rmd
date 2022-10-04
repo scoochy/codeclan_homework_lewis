@@ -1,0 +1,124 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+
+```{r}
+plot(cars)
+```
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
+
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
+
+
+Question 1:
+
+```{r}
+library(CodeClanData)
+
+drinks_content
+dim(drinks_content)
+names(drinks_content)
+```
+
+Variables are above ^^ some are chr and some are dbl. Dimensions 242 x 18
+
+Question 2:
+
+```{r}
+drinks_content %>% 
+  select(Beverage, Beverage_category, Beverage_prep, Calories) %>% 
+  filter(!is.na(Calories))
+  
+```
+
+Question 3:
+
+```{r}
+drinks_content %>% 
+  select(Beverage, Calories) %>% 
+  mutate(calorie_diff = Calories - 135) %>% 
+  arrange(desc(calorie_diff))
+```
+
+Question 4:
+
+```{r}
+drinks_content %>% 
+  select(Beverage, Beverage_category, Calories) %>%
+  group_by(Beverage_category) %>% 
+  summarise(calorie_mean = mean(Calories)) %>% 
+  arrange(desc(calorie_mean)) %>% 
+  head(3)
+  
+```
+
+
+```{r}
+drinks_content %>% 
+  select(Beverage, Beverage_category, Calories) %>%
+  group_by(Beverage_category) %>% 
+  summarise(calorie_mean = mean(Calories)) %>% 
+  arrange(desc(calorie_mean)) %>% 
+  tail(3)
+  
+```
+
+Question 5:
+
+```{r}
+drinks_content %>% 
+  select(Beverage, Beverage_prep, Calories) %>%
+  group_by(Beverage_prep) %>% 
+  summarise(calorie_mean = mean(Calories)) %>% 
+  arrange(desc(calorie_mean)) 
+  
+```
+
+
+Question 6:
+
+```{r}
+average_calories <- drinks_content %>% 
+  summarise(av = mean(Calories)) %>% 
+  pull()
+  
+
+drinks_content %>% 
+  select(Beverage_prep, Calories) %>%
+  group_by(Beverage_prep) %>% 
+  filter(Calories > average_calories) %>% 
+  arrange(desc(Calories))
+  
+```
+
+Question 7:
+
+```{r}
+drinks_content %>% 
+  select(Beverage ,Beverage_category , Beverage_prep, Calories) %>%
+  group_by(Beverage_category) %>% 
+  summarise(calorie_mean = mean(Calories)) %>% 
+  arrange(desc(calorie_mean))
+
+drinks_content %>% 
+  select(Beverage ,Beverage_category , Beverage_prep, Calories) %>%
+  group_by(Beverage_prep) %>% 
+  summarise(calorie_mean = mean(Calories)) %>% 
+  arrange(desc(calorie_mean))
+
+drinks_content %>% 
+  select(Beverage ,Beverage_category , Beverage_prep, Calories) %>%
+  group_by(Beverage) %>% 
+  summarise(calorie_mean = mean(Calories)) %>% 
+  arrange(desc(calorie_mean))
+```
+
+Short, Tazo Tea/Brewed Coffee is best
