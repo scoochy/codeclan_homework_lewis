@@ -1,0 +1,124 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(tidyverse)
+library(dplyr)
+```
+
+
+Question 1:
+
+```{r}
+movies <- read_csv("data/movies.csv")
+
+movies
+```
+
+Budget/Revenue could be given in millions/thousands. release_date could be date datatype. Seems fairly clean.
+
+Question 2:
+
+```{r}
+movies_selected <- movies %>% 
+  select(title, runtime, budget)
+```
+
+Question 3:
+Budget being 0 may be missing or may be a 0 budget film. 35 runtimes were 0 which is impossible, 2 were NA and 1037 budgets were 0 which is unlikely.
+
+```{r}
+movies_selected %>% 
+  filter(is.na(runtime)) %>% 
+  summarise(n())
+
+movies_selected %>% 
+  filter(is.na(budget)) %>% 
+  summarise(n())
+
+movies_selected %>% 
+  filter(runtime == 0) %>% 
+  summarise(n())
+
+movies_selected %>% 
+  filter(budget == 0) %>% 
+  summarise(n())
+  
+```
+
+Question 4:
+
+```{r}
+movies_runtime <- movies_selected %>% 
+  mutate(runtime = na_if(runtime, "0"))
+```
+
+Question 5:
+
+
+```{r}
+movies_imputed <- movies_runtime %>% 
+  mutate(runtime = coalesce(runtime, median(runtime, na.rm = TRUE))) 
+  
+movies_imputed
+
+```
+
+Question 6:
+
+```{r}
+movies_imputed %>% 
+  slice_max(runtime, n = 10)
+
+movies_imputed %>% 
+  slice_min(runtime, n = 10)
+```
+
+Question 7:
+
+```{r}
+movies_imputed %>% 
+  mutate(budget = if_else(budget < 100, median(budget), budget))
+
+```
+
+Extension
+
+Question 1:
+
+```{r}
+movie_budgets <- movies_imputed %>% 
+  mutate(
+    budget_type = case_when(
+      budget > 40e6 ~ "Big Budget",
+      budget >= 12e6 ~ "Medium Budget",
+      TRUE ~ "Small Budget"
+      )
+    )
+movie_budgets
+```
+
+
+Question 2:
+
+```{r}
+movies %>% 
+  summarise(
+    across(
+      .cols = where(is.character),
+      .fns = ~sum(is.na(.x))
+    )
+  )
+
+movies %>% 
+  summarise(
+    across(
+      .cols = where(is.numeric),
+      .fns = ~sum(is.na(.x))
+    )
+  )
+```
+
+
