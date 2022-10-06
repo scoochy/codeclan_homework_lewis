@@ -92,7 +92,7 @@ Question 1:
 movie_budgets <- movies_imputed %>% 
   mutate(
     budget_type = case_when(
-      budget > 40e6 ~ "Big Budget",
+      budget >= 40e6 ~ "Big Budget",
       budget >= 12e6 ~ "Medium Budget",
       TRUE ~ "Small Budget"
       )
