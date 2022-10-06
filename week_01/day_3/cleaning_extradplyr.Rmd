@@ -45,6 +45,8 @@ movies_selected %>%
 movies_selected %>% 
   filter(budget == 0) %>% 
   summarise(n())
+
+
   
 ```
 
@@ -95,8 +97,8 @@ movie_budgets <- movies_imputed %>%
       budget >= 40e6 ~ "Big Budget",
       budget >= 12e6 ~ "Medium Budget",
       TRUE ~ "Small Budget"
-      )
     )
+  )
 movie_budgets
 ```
 
@@ -104,7 +106,7 @@ movie_budgets
 Question 2:
 
 ```{r}
-movies %>% 
+movies %>%
   summarise(
     across(
       .cols = where(is.character),
@@ -112,7 +114,7 @@ movies %>%
     )
   )
 
-movies %>% 
+movies %>%
   summarise(
     across(
       .cols = where(is.numeric),
@@ -120,5 +122,7 @@ movies %>%
     )
   )
 ```
+
+
 
 
