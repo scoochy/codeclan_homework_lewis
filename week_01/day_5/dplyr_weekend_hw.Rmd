@@ -1,0 +1,112 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+
+Loading in dataset and initial investigation.
+
+```{r}
+library(tidyverse)
+
+books <- read.csv("2_weekend_homework/data/books.csv")
+
+
+names(books)
+```
+
+```{r}
+dim(books)
+```
+Mixture of chr and int columns.
+
+
+```{r}
+books %>% 
+  summarise(
+    across(
+      .cols = everything(),
+      .fns = ~sum(is.na(.x))
+    )
+  )
+```
+
+No missing values in any column.
+
+Q1: Classify books based on their number of pages
+
+```{r}
+books %>% 
+  select(title, num_pages) %>% 
+  mutate(
+    book_size = case_when(
+      num_pages > 900 ~ "Very Large",
+      num_pages > 500 ~ "Large",
+      num_pages > 300 ~ "Medium",
+      TRUE ~ "Small"
+    )
+  )
+```
+
+Q2: Find the top 10 highest average rating by publisher
+
+```{r}
+books %>% 
+  select(title, average_rating, publisher) %>% 
+  group_by(publisher) %>% 
+  summarise(publisher_rating = mean(average_rating)) %>% 
+  slice_max(publisher_rating, n = 10)
+```
+
+There are 12 publishers with a perfect score of 5
+
+Q3: Order John Grisham books by rating
+
+```{r}
+books %>% 
+  select(title, authors, average_rating) %>% 
+  #used the grepl function to include books co-authored by John Grisham
+  filter(grepl("John Grisham", authors)) %>% 
+  arrange(desc(average_rating))
+  
+```
+
+Q4: Determine which authors are considered above average
+
+```{r}
+#save the average rating across all books in a variable
+average_rating_all <- books %>% 
+  summarise(mean(average_rating))
+
+books %>% 
+  select(authors, average_rating) %>% 
+  group_by(authors) %>% 
+  summarise(author_rating = mean(average_rating)) %>% 
+  filter(author_rating > pull(average_rating_all))
+```
+
+
+Q5: Check which languages were most popular for the reviewed books
+
+```{r}
+
+#recode different types of english to all be classed as english
+recoded_books <- books %>% 
+  select(title, language_code) %>% 
+  mutate(language_code = 
+    if_else(
+      language_code %in% c("en-US", "en-CA", "en-GB"),
+      "eng",
+      language_code)
+  )
+  
+
+recoded_books %>% 
+  select(title, language_code) %>% 
+  group_by(language_code) %>% 
+  summarise(occurences = n()) %>% 
+  arrange(desc(occurences))
+```
+
+
+
