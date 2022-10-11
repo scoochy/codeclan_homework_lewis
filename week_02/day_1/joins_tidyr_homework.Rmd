@@ -1,0 +1,100 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(tidyr)
+library(tidyverse)
+library(janitor)
+```
+
+
+```{r}
+card_base <- read.csv("data/CardBase.csv")
+customer_base <- read.csv("data/CustomerBase.csv")
+exam_scores <- read.csv("data/exam_scores.csv")
+fraud_base <- read.csv("data/FraudBase.csv")
+hat_observations <- read.csv("data/hat_observations.csv")
+transaction_base <- read.csv("data/TransactionBase.csv")
+```
+
+Q1:
+
+```{r}
+clean_names(card_base)
+clean_names(transaction_base)
+clean_names(customer_base)
+clean_names(fraud_base)
+```
+
+
+Q2:
+
+```{r}
+left_join(card_base, customer_base, by = "Cust_ID")
+```
+
+
+
+Q3:
+
+```{r}
+full_join(fraud_base, transaction_base)
+```
+10000 rows means 109 fraudulent transactions matched
+
+
+Q4:
+
+```{r}
+semi_join(card_base, transaction_base, by = c("Card_Number" = "Credit_Card_ID"))
+```
+
+Q5:
+
+```{r}
+hat_separated <- hat_observations %>% 
+  separate(observation, into = c("hat_colour", "hat_type"), sep = ",")
+```
+
+Q6:
+
+```{r}
+hat_united <- hat_separated %>% 
+  unite(date, c("day", "month", "year"), sep = "/")
+
+hat_united
+```
+
+Ext Q1:
+
+```{r}
+fraud_base <- inner_join(fraud_base, transaction_base) 
+
+fraud_more <- inner_join(fraud_base, card_base, by = c("Credit_Card_ID" = "Card_Number"))
+
+fraud_complete <- inner_join(fraud_more, customer_base, by = "Cust_ID")
+
+fraud_complete
+```
+
+
+
+Q2:
+
+```{r}
+exam_scores_long <- exam_scores %>% 
+  pivot_longer(cols = starts_with("exam"),
+               names_to = "exam_question",
+               values_to = "score")
+
+exam_scores_long %>% 
+  separate(exam_question,
+           c("words", "question_number"), 
+           sep = "_Q") %>% 
+  select(id, question_number, score)
+  
+
+```
+
