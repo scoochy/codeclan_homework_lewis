@@ -46,7 +46,7 @@ Q4:
 coalesced_tweets <- tweets %>% 
   mutate(media_type = coalesce(media_type, "text")) %>% 
   group_by(media_type) %>% 
-  summarise(sum(favorite_count))
+  summarise(total_fav = sum(favorite_count))
   
 
 coalesced_tweets
@@ -58,6 +58,11 @@ Q5:
 tweets %>% 
   select(display_text_width) %>% 
   summarise(mean(display_text_width))
+
+tweets %>% 
+  mutate(count_str_length = str_length(text)) %>% 
+  summarise(mean(count_str_length))
+  
 ```
 
 
@@ -70,10 +75,10 @@ tweets_info <- left_join(tweets, info, by = "tweet_id")
 Q7:
 
 ```{r}
-codeclan_hashtags <- tweets_info %>% 
+(codeclan_hashtags <- tweets_info %>% 
   select(tweet_id, hashtags) %>% 
+  mutate(hashtags = str_to_lower(hashtags)))
   filter(!is.na(hashtags)) %>% 
-  mutate(hashtags = str_to_lower(hashtags))
 
 codeclan_hashtags
   
@@ -87,7 +92,8 @@ pattern <- "c\\("
 
 occurences <- codeclan_hashtags %>% 
   select(hashtags) %>% 
-  str_extract_all(pattern)
+  mutate(first_letters = substr(hashtags, 1, 2)) %>% 
+  filter(str_detect(first_letters, pattern))
   
 ```
 
@@ -100,18 +106,28 @@ mentions <- tweets %>%
   select(text) %>% 
   str_extract_all(edin_pattern)
   
-
+mentions
 ```
 Q10:
 
 ```{r}
-user_pattern <- "[_]*[:alnum:]*[_]*"
+user_pattern <- "@[a-zA-Z0-9_]+"
 
 usernames <- tweets %>% 
-  select(reply_to_screen_name) %>% 
-  str_extract_all(user_pattern)
+  select(text) %>% 
+  str_extract_all(user_pattern) %>% 
+  flatten_chr()
 
 usernames
+
+
+tweets %>%
+  select(text) %>%
+  mutate(user_tweeeted = str_extract_all(text, "@[A-z0-9_]+")) %>%
+  unnest(cols = c(user_tweeeted)) %>%
+  group_by(user_tweeeted) %>%
+  summarise(count = n()) %>%
+  arrange(desc(count))
 ```
 
 
