@@ -1,0 +1,117 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(tidyverse)
+library(stringr)
+```
+
+```{r}
+info <- read.csv("data/code_clan_info.csv")
+tweets <- read.csv("data/code_clan_tweets.csv")
+```
+
+Q1:
+
+```{r}
+names(tweets)
+```
+
+```{r}
+dim(tweets)
+```
+Q2:
+
+```{r}
+tweets %>% 
+  filter(is_quote == FALSE) %>% 
+  summarise(total_fav = sum(favorite_count))
+  
+```
+
+Q3:
+
+```{r}
+tweets %>% 
+  filter(is_quote == FALSE) %>%
+  group_by(source) %>% 
+  summarise(average_rt_platform = mean(retweet_count))
+```
+
+Q4:
+
+```{r}
+coalesced_tweets <- tweets %>% 
+  mutate(media_type = coalesce(media_type, "text")) %>% 
+  group_by(media_type) %>% 
+  summarise(sum(favorite_count))
+  
+
+coalesced_tweets
+```
+
+Q5:
+
+```{r}
+tweets %>% 
+  select(display_text_width) %>% 
+  summarise(mean(display_text_width))
+```
+
+
+Q6:
+
+```{r}
+tweets_info <- left_join(tweets, info, by = "tweet_id")
+```
+
+Q7:
+
+```{r}
+codeclan_hashtags <- tweets_info %>% 
+  select(tweet_id, hashtags) %>% 
+  filter(!is.na(hashtags)) %>% 
+  mutate(hashtags = str_to_lower(hashtags))
+
+codeclan_hashtags
+  
+```
+
+Q8:
+
+
+```{r}
+pattern <- "c\\("
+
+occurences <- codeclan_hashtags %>% 
+  select(hashtags) %>% 
+  str_extract_all(pattern)
+  
+```
+
+Q9:
+
+```{r}
+edin_pattern <- "(?i)edinburgh"
+
+mentions <- tweets %>% 
+  select(text) %>% 
+  str_extract_all(edin_pattern)
+  
+
+```
+Q10:
+
+```{r}
+user_pattern <- "[_]*[:alnum:]*[_]*"
+
+usernames <- tweets %>% 
+  select(reply_to_screen_name) %>% 
+  str_extract_all(user_pattern)
+
+usernames
+```
+
+
