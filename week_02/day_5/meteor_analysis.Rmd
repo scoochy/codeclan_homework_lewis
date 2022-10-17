@@ -102,6 +102,6 @@ library(testthat)
 test_that("Non numeric inputs return an error", {
   expect_error(refactor_get_meteorite_count(meteor_data, TRUE))
   expect_error(refactor_get_meteorite_count(meteor_data, "Hello"))
-})
+}) 
 ```
 
