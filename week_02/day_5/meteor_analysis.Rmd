@@ -1,0 +1,107 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+Q1: Read in the data, returned a list of lists so had to access the first 
+element which was the data frame
+
+```{r}
+meteor_data <- source("meteors_clean.R")
+meteor_data <- meteor_data[[1]]
+
+
+```
+
+
+Q2: Top 10 biggest meteors names and year
+```{r}
+meteor_data %>% 
+  slice_max(`mass(g)`, n = 10) %>% 
+  select(name, year)
+```
+
+Q3:
+
+```{r}
+meteor_data %>% 
+  group_by(fall) %>% 
+  summarise(average_mass = mean(`mass(g)`))
+```
+
+Q4:
+
+```{r}
+meteor_data %>% 
+  filter(year >= 2000) %>% 
+  group_by(year) %>% 
+  summarise(num_meteors = n())
+  
+```
+
+Q5:
+
+```{r}
+get_meteorite_count <- function(df, input_year){
+  
+  number_of_meteors <- df %>% 
+    filter(year == input_year) %>% 
+    summarise(num_meteors = n()) %>% 
+    pull()
+  
+  if (number_of_meteors > 0){
+    return(paste("In", input_year, ", there were", number_of_meteors, "meteorites."))
+  }
+  if (number_of_meteors == 0){
+    return(paste("As far as we know, there were no meteorites that year"))
+  }
+}
+
+
+```
+
+Q6: The function could be improved by including errors for incorrect datatypes in each argument. A range of years could also be included to cover only years with recorded data. The data frame could be checked also to make sure it includes the correct columns
+
+Q7:
+
+```{r}
+library(testthat)
+
+test_that("Non numeric inputs return an error", {
+  expect_error(get_meteorite_count(meteor_data, TRUE))
+  expect_error(get_meteorite_count(meteor_data, "Hello"))
+})
+```
+Q8:
+
+```{r}
+refactor_get_meteorite_count <- function(df, input_year){
+  
+  if (!is.numeric(input_year)){
+    stop("Non-numeric input")
+  }
+  
+  number_of_meteors <- df %>% 
+    filter(year == input_year) %>% 
+    summarise(num_meteors = n()) %>% 
+    pull()
+  
+  if (number_of_meteors > 0){
+    return(paste("In", input_year, ", there were", number_of_meteors, "meteorites."))
+  }
+  if (number_of_meteors == 0){
+    return(paste("As far as we know, there were no meteorites that year"))
+  }
+}
+```
+
+
+```{r}
+library(testthat)
+
+test_that("Non numeric inputs return an error", {
+  expect_error(refactor_get_meteorite_count(meteor_data, TRUE))
+  expect_error(refactor_get_meteorite_count(meteor_data, "Hello"))
+})
+```
+
