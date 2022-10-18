@@ -1,4 +1,18 @@
-/* MVP */
+/* MVP
+ * 
+ * 
+ * 
+ * 
+ * how we write sql
+ * s -> f -> w -> g -> h -> o -> l
+ * 
+ * how it executes
+ * 
+ * f -> w -> g -> h -> s -> o -> l 
+ * 
+ * 
+ * 
+ *  */
 /* Q1 */
 
 SELECT *
@@ -96,7 +110,7 @@ LIMIT 1;
 -- Q15
 
 SELECT first_name, last_name, fte_hours, salary, 
-        concat(salary * fte_hours) AS effective_yearly_salary
+        salary * fte_hours AS effective_yearly_salary
 FROM employees;
 
 
@@ -115,7 +129,7 @@ FROM employees
 
 SELECT first_name, last_name, department,
         concat(first_name,' ', last_name, '-', department, 
-        '(joined ', to_char(start_date, 'Month' ), 
+        ' (joined ', to_char(start_date, 'FMMonth'), 
         EXTRACT(YEAR FROM start_date), ')') AS badge_label
 FROM employees 
 WHERE first_name IS NOT NULL AND last_name IS NOT NULL AND department IS NOT NULL AND start_date IS NOT NULL;
