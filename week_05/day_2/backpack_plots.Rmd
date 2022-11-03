@@ -1,0 +1,85 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(tidyverse)
+
+backpack <- CodeClanData::backpack
+
+```
+
+
+Q1:
+Load in the libraries you need, and look at the backpack data. Take note of variable names and dimensions.
+
+```{r}
+backpack
+```
+
+Q2:
+What is the distribution of backpack weights that students are carrying? Choose an appropriate graph to show the distribution.
+
+```{r}
+backpack %>% 
+  ggplot() +
+  geom_histogram(aes(x = backpack_weight), fill = "darkgreen", bins = 20) +
+  labs(y = "number of backpacks", x = "weight") +
+  theme_light()
+```
+
+Q3:
+
+Are there differences in backpack weight between sex?
+
+```{r}
+
+backpack %>% 
+  ggplot() +
+  geom_histogram(aes(x = backpack_weight, fill = sex), bins = 20) +
+  facet_wrap(~sex, nrow = 2) +
+  labs(y = "number of backpacks", x = "weight") +
+  theme_light()
+
+```
+
+Q4:
+
+What is the relationship between body weight and backpack weight?
+
+```{r}
+backpack %>% 
+  ggplot(aes(x = backpack_weight, y = body_weight)) + 
+  geom_point() +
+  theme_light()
+```
+
+No clear relationship
+
+
+Q5:
+
+Is this relationship different between men and women? Choose an appropriate plot and interpret your findings.
+
+```{r}
+backpack %>% 
+  ggplot(aes(x = backpack_weight, y = body_weight, colour = sex)) + 
+  geom_point() +
+  facet_wrap(~sex, nrow = 1) +
+  theme_light()
+
+```
+
+Q6:
+
+What proportion of students report back pain?
+
+```{r}
+backpack %>% 
+  mutate(back_pain = if_else(back_problems == 1, "Yes", "No") %>% 
+  ggplot(aes(x = back_problems))+
+  geom_col()
+  
+```
+

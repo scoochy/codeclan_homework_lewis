@@ -1,0 +1,114 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+
+```{r}
+library(CodeClanData)
+library(tidyverse)
+library(ggplot2)
+
+
+qb_revenue_breakdown
+```
+
+1) Take the data in the dataset qb_revenue_breakdown and make a stacked bar chart showing the sources of revenue across the two years in the dataset.
+
+```{r}
+qb_revenue_breakdown %>% 
+  ggplot(aes(x = Product, y = Revenue, fill = Year)) +
+  geom_col() +
+  theme
+
+``` 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+2: 
+Make a line chart showing monthly sales of the “flagship product” - the ‘KwikBit Unit 1’ - over the last year. This data is inside qb_monthly_sales, but you will need to use filter() or subset() (base R).
+
+
+```{r}
+qb_monthly_sales %>% 
+  filter(Cashflow == "Kwikbit Unit 1 Sales") %>% 
+  ggplot(aes(x = Date, y = Amount)) +
+  geom_line() + 
+  theme
+```
+3:
+Make a line chart showing monthly revenue and costs over the last year. This data is also in qb_monthly_sales.
+
+```{r}
+qb_monthly_sales %>% 
+  filter(Cashflow == "Total Revenue" | Cashflow == "Cost") %>% 
+  ggplot(aes(x = Date, y = Amount, group = Cashflow)) +
+  geom_line(aes(colour = Cashflow)) +
+  theme
+```
+Question 4.
+Show annual sales of personal fitness trackers over the last 5 years broken down by company as a ribbon plot (use geom_area). This data is in qb_competitors.
+
+```{r}
+qb_competitors %>% 
+  ggplot(aes(x = Year, y = Revenue, group = Company)) +
+  geom_area(aes(fill = Company)) +
+  theme 
+```
+
+Question 5.
+Now show the sales from the four competitors as a line graph. Include an extra layer that shows the data points used to make the lines.
+
+```{r}
+qb_competitors %>% 
+  ggplot(aes(x = Year, y = Revenue, group = Company)) +
+  geom_line(aes(colour = Company)) + 
+  geom_point() +
+  theme
+  
+
+
+```
+
+
+Question 6.
+Now the company wants to compare the number of steps that their device counts vs. their competitors. Make a line graph of the number of steps throughout time, and use faceting to compare between companies and people. The data for this is in qb_device_data.
+
+```{r}
+qb_device_data %>% 
+  mutate(time = hours + mins/60) %>% 
+  ggplot(aes(x = time, y = counts, colour = device)) +
+  geom_line() +
+  facet_wrap(id~device) +
+  custom_theme
+  
+```
+
+
+
+```{r}
+custom_theme <- theme(panel.background = element_rect(fill = "white"),
+                      panel.grid = element_line(colour = "grey92"),
+                      axis.text = element_text(size = 8),
+                      axis.title = element_text(size = 10),
+                      title = element_text(size = 12))
+
+
+col_scheme <- c("#E89FE9", "#50434F", "#B6A7B5", "#F9A472", "#BD7040")
+
+theme <- list(custom_theme, scale_colour_manual(values = col_scheme))
+
+```
+
