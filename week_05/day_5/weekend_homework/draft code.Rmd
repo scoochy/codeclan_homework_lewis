@@ -1,0 +1,39 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+game_sales <- CodeClanData::game_sales
+
+genres <- game_sales %>% 
+  distinct(genre) %>% 
+  pull()
+
+game_sales %>% 
+  select(year_of_release) %>% 
+  max()
+```
+
+```{r}
+years <- sort(unique(game_sales$year_of_release))
+```
+
+
+
+```{r}
+game_sales %>% 
+  filter(year_of_release == 2012) %>% 
+  select(name, developer, sales) %>% 
+  slice_max(order_by = sales, n = 10)
+```
+
+
+```{r}
+game_sales %>% 
+  group_by(year_of_release, platform) %>% 
+  summarise(total_sales = sum(sales)) %>% 
+  ggplot(aes(x = year_of_release, y = total_sales, colour = platform)) +
+  geom_line()  
+```
+
