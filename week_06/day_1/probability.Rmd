@@ -1,0 +1,125 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(tidyverse)
+titanic <- read_csv("data/titanic.csv")
+```
+```{r}
+titanic %>% 
+  distinct(class)
+```
+```{r}
+num_surv_crew <- titanic %>% 
+  mutate(crew = if_else(class %in% c("3rd", "2nd", "1st"), FALSE, TRUE)) %>% 
+  filter(crew == TRUE, survived == "yes") %>% 
+  nrow()
+
+num_crew <- titanic %>% 
+  mutate(crew = if_else(class %in% c("3rd", "2nd", "1st"), FALSE, TRUE)) %>% 
+  filter(crew == TRUE) %>% 
+  nrow()
+
+prob_surv_crew <- num_surv_crew/num_crew
+```
+
+
+```{r}
+num_surv_pass <- titanic %>% 
+  mutate(crew = if_else(class %in% c("3rd", "2nd", "1st"), FALSE, TRUE)) %>% 
+  filter(crew == FALSE, survived == "yes") %>% 
+  nrow()
+
+num_pass <- titanic %>% 
+  mutate(crew = if_else(class %in% c("3rd", "2nd", "1st"), FALSE, TRUE)) %>% 
+  filter(crew == FALSE) %>% 
+  nrow()
+
+prob_surv_pass <- num_surv_pass/num_pass
+```
+
+Crew had less chance of surviving
+
+
+```{r}
+source("../../../codeclan_work/week_06/day_1/functions/prob.R")
+```
+
+```{r}
+one_roll <- rolldie(1)
+
+one_roll_less <- one_roll %>% 
+  filter(X1 < 5) %>% 
+  nrow()
+
+Q1 <- one_roll_less / nrow(one_roll)
+
+```
+
+
+```{r}
+three_roll <-  rolldie(3)
+
+three_roll_rows <- three_roll %>% 
+  nrow()
+
+```
+
+
+```{r}
+four_roll <-  rolldie(4)
+
+four_roll_set <- four_roll %>% 
+  mutate(total = X1 + X2 + X3 + X4) %>% 
+  filter(total %in% c(5, 6, 7)) %>% 
+  nrow()
+
+prob_four <- four_roll_set/nrow(four_roll)
+  
+```
+
+We assume permutations are counted 
+
+
+```{r}
+library(gtools)
+
+a <- combinations(5, 5)
+b <- permutations(5, 5)
+
+q4 <- 1/120
+```
+
+
+```{r}
+six_roll <- rolldie(6)
+
+six_roll_num <- six_roll %>% 
+  filter(isin(., c(6, 5, 4, 3, 2, 1), ordered = TRUE)) %>% 
+  nrow()
+
+six_roll_prob <- six_roll_num / nrow(six_roll)
+```
+
+```{r}
+six_roll <- rolldie(6)
+
+six_roll_num2 <- six_roll %>% 
+  filter(isin(., c(6, 5, 4, 3, 2, 1), ordered = FALSE)) %>% 
+  nrow()
+
+six_roll_prob2 <- six_roll_num2 / nrow(six_roll)
+```
+
+
+```{r}
+deck <- cards(jokers = FALSE)
+
+deck %>% 
+  mutate(black = if_else(suit %in% c("Club", "Spade"), TRUE, FALSE)) %>% 
+  filter(black == TRUE)
+```
+
+26 black cards and 13 spade so 50% chance
