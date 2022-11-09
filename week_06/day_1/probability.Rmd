@@ -42,6 +42,18 @@ prob_surv_pass <- num_surv_pass/num_pass
 
 Crew had less chance of surviving
 
+```{r}
+library(janitor)
+titanic %>%
+  tabyl(class, survived) %>%
+  adorn_totals(where = c("row", "col")) %>%
+  adorn_percentages(denominator = "all") %>%
+  adorn_rounding(digits = 4) %>%
+  adorn_title()
+
+```
+
+
 
 ```{r}
 source("../../../codeclan_work/week_06/day_1/functions/prob.R")
