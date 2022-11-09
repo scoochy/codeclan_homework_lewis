@@ -30,7 +30,7 @@ phones_stats <- phones %>%
 
 phones %>% 
   ggplot(aes(x = rating)) +
-  geom_histogram(aes(y = ..density..), colour = "gold", size = 1.5) +
+  geom_histogram(aes(y = ..density..), colour = "gold", size = 1.5, bins = 30) +
   stat_function(
     fun = dnorm,
     args = list(
@@ -47,7 +47,7 @@ The normal distribution seems to give a good model of the ratings.
 Q4:
 
 ```{r}
-phones %>% 
+samsung_phones %>% 
   mutate(z_rating = scale(rating)) %>% 
   mutate(within_one = if_else(abs(z_rating) <= 1, TRUE, FALSE),
     within_two = if_else(abs(z_rating) <= 2, TRUE, FALSE),
@@ -61,7 +61,11 @@ phones %>%
 
 
 ```{r}
-phones %>% 
-  filter(brand == "Samsung") %>% 
-  qqnorm()
+samsung_phones <- phones %>% 
+  filter(brand == "Samsung") 
 
+library(car)
+
+qqnorm(samsung_phones$rating)
+qqPlot(samsung_phones$rating)
+```
