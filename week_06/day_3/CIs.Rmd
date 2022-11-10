@@ -1,0 +1,138 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+Q1:
+```{r}
+library(tidyverse)
+library(janitor)
+library(infer)
+```
+```{r}
+ames <- read_csv("data/ames.csv") %>% 
+  clean_names()
+```
+Q2:
+```{r}
+
+lot_area_stats <- ames %>% 
+  summarise(mean = mean(lot_area),
+            sd = sd(lot_area))
+
+ames %>% 
+  ggplot(aes(x = lot_area)) +
+  geom_histogram(aes(y = ..density..))+
+  stat_function(
+    fun = "dnorm",
+    args = list(
+      mean = lot_area_stats$mean,
+      sd = lot_area_stats$sd
+    )
+  )
+```
+
+There are much greater sized lots which are skewing the data, the peak is also much
+higher than a normal distribution would have.
+
+
+Q3:
+
+```{r}
+infer_resample <- ames %>% 
+  specify(response = lot_area) %>% 
+  generate(reps = 200, type = "bootstrap") %>% 
+  calculate(stat = "mean")
+```
+
+```{r}
+infer_resample %>% 
+  visualise(bins = 50) +
+  shade_ci(endpoints = infer::get_confidence_interval(infer_resample))
+```
+
+Q4:
+
+```{r}
+infer_resample_ci <- infer_resample %>% 
+  get_ci()
+
+infer_resample_ci
+```
+Q5:
+
+```{r}
+infer_resample_ci_99 <- infer_resample %>% 
+  get_ci(level = 0.99)
+
+infer_resample_ci_99
+```
+```{r}
+infer_resample %>% 
+  visualise(bins = 50) +
+  shade_ci(endpoints = infer_resample_ci_99)
+```
+
+It's wider.
+
+Q6:
+
+```{r}
+point_estimate <- infer_resample %>% 
+  summarise(mean = mean(stat))
+
+point_estimate
+```
+
+Ext:
+
+```{r}
+ames_new <- ames %>% 
+  mutate(old = if_else(year_built < 1920, TRUE, FALSE))
+```
+
+
+```{r}
+prop_built_pre1920_resample <- ames_new %>% 
+  specify(response = old, success = "TRUE") %>% 
+  generate(reps = 200, type = "bootstrap") %>% 
+  calculate(stat = "prop")
+```
+
+```{r}
+prop_ci <- prop_built_pre1920_resample %>% 
+  get_ci()
+
+point_prop <- prop_built_pre1920_resample %>% 
+  summarise(mean = mean(stat))
+```
+
+```{r}
+prop_built_pre1920_resample %>% 
+  visualise(bins = 40) +
+  shade_ci(endpoints = prop_ci)
+```
+
+
+```{r}
+prop_built_pre1920_resampleXL <- ames_new %>% 
+  specify(response = old, success = "TRUE") %>% 
+  generate(reps = 50000, type = "bootstrap") %>% 
+  calculate(stat = "prop")
+```
+
+```{r}
+prop_ciXL <- prop_built_pre1920_resampleXL %>% 
+  get_ci()
+
+point_propXL <- prop_built_pre1920_resampleXL %>% 
+  summarise(mean = mean(stat))
+```
+
+```{r}
+prop_built_pre1920_resampleXL %>% 
+  visualise(bins = 40) +
+  shade_ci(endpoints = prop_ciXL)
+```
+
+The confidence interval is slightly narrower but the data appears much more 
+like a normal distribution.
