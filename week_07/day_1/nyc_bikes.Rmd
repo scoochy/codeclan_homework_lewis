@@ -1,0 +1,25 @@
+---
+title: "NYC Bikes"
+output: 
+  html_notebook:
+    code_folding: hide
+  
+---
+
+```{r}
+library(tsibbledata)
+library(tidyverse)
+library(lubridate)
+
+nyc_bikes 
+```
+
+Wrangle start_time column into separate year, month and day columns 
+
+```{r}
+nyc_bikes <- nyc_bikes %>% 
+  mutate(year = year(start_time),
+         month = month(start_time, label = TRUE),
+         day = wday(start_time, label = TRUE))
+```
+
