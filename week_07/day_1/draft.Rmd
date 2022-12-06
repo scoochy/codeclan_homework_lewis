@@ -1,0 +1,168 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(tsibbledata)
+library(tidyverse)
+library(lubridate)
+
+nyc_bikes <- tsibbledata::nyc_bikes
+```
+
+```{r}
+nyc_bikes %>% 
+  filter(across(.fns = ~is.na(.x)))
+```
+
+```{r}
+nyc_bikes_tibble <- tibble(nyc_bikes) %>% 
+  mutate(age_range = case_when(
+    birth_year > 1992 ~ "16-25",
+    birth_year > 1982 ~ "26-35",
+    birth_year > 1972 ~ "36-45",
+    TRUE ~ "60+")) %>% 
+  group_by(age_range) %>% 
+  summarise(count = n())
+```
+
+Duration
+
+```{r}
+nyc_bikes_tibble %>% 
+  group_by(journey_length) %>% 
+  summarise(count = n()) %>% 
+  ggplot(aes(x = journey_length, y = cumsum(count)))+
+  xlim(0, 30) +
+  geom_line()
+```
+
+
+```{r}
+nyc_bikes %>% 
+  filter(type == "Customer")
+```
+
+
+
+```{r}
+nyc_bikes %>% 
+  distinct(start_lat)
+```
+
+map of rides
+
+```{r}
+library(leaflet)
+nyc_bikes_map_start <- leaflet(nyc_bikes) %>% 
+  addTiles() %>% 
+  addMarkers(lat = ~start_lat,
+                   lng = ~start_long,
+             clusterOptions = markerClusterOptions()) %>% 
+  addCircleMarkers(lat = 40.717008518233285,
+             lng = -74.03334974464967,
+             color = "red",
+             label = "Exchange Place") %>% 
+  addCircleMarkers(lat = 40.72052575758789,
+             lng = -74.04163322228074,
+             color = "red",
+             label = "Grove Street") %>% 
+  addCircleMarkers(lat = 40.736514099479066,
+             lng = -74.02689084260872,
+             color = "red",
+             label = "Hoboken") %>% 
+  addCircleMarkers(lat = 40.727593145599364,
+             lng = -74.03354862661216,
+             color = "red",
+             label = "Newport") %>% 
+  addCircleMarkers(lat = 40.73374440298845,
+             lng = -74.06001829264527,
+             color = "red",
+             label = "Journal Square") %>% 
+  addCircleMarkers(lat = 40.711557785411244,
+             lng = -74.08718799822515,
+             color = "red",
+             label = "New Jersey City University") %>% 
+  addCircleMarkers(lat = 40.704873115488375,
+             lng = -74.05032039367558,
+             color = "red",
+             label = "Liberty State Park")
+
+nyc_bikes_map_start
+  
+```
+
+
+```{r}
+nyc_bikes_map_end <- leaflet(nyc_bikes) %>% 
+  addTiles() %>% 
+  addMarkers(lat = ~end_lat,
+                   lng = ~end_long,
+             clusterOptions = markerClusterOptions()) %>% 
+  addCircleMarkers(lat = 40.717008518233285,
+             lng = -74.03334974464967,
+             color = "red",
+             label = "Exchange Place") %>% 
+  addCircleMarkers(lat = 40.72052575758789,
+             lng = -74.04163322228074,
+             color = "red",
+             label = "Grove Street") %>% 
+  addCircleMarkers(lat = 40.736514099479066,
+             lng = -74.02689084260872,
+             color = "red",
+             label = "Hoboken") %>% 
+  addCircleMarkers(lat = 40.727593145599364,
+             lng = -74.03354862661216,
+             color = "red",
+             label = "Newport") %>% 
+  addCircleMarkers(lat = 40.73374440298845,
+             lng = -74.06001829264527,
+             color = "red",
+             label = "Journal Square") %>% 
+  addCircleMarkers(lat = 40.711557785411244,
+             lng = -74.08718799822515,
+             color = "red",
+             label = "New Jersey City University") %>% 
+  addCircleMarkers(lat = 40.704873115488375,
+             lng = -74.05032039367558,
+             color = "red",
+             label = "Liberty State Park") 
+
+nyc_bikes_map_end
+```
+
+
+ex pl 40.717008518233285, -74.03334974464967
+grove st 40.72052575758789, -74.04163322228074
+hobo 40.736514099479066, -74.02689084260872
+newport 40.727593145599364, -74.03354862661216
+journal square 40.73374440298845, -74.06001829264527
+NJ uni 40.711557785411244, -74.08718799822515
+liberty state park 40.704873115488375, -74.05032039367558
+
+overlay locations of colleges (min age 16)
+
+seasonal and day of the week time series graphs
+
+
+```{r}
+library(tsibble)
+
+nyc_bikes_time <- tsibble::tsibble(nyc_bikes, index = start_time)
+
+nyc_bikes_time %>% 
+  index_by(month) %>% 
+  summarise(count = n()) %>% 
+  ggplot(aes(x = month, y = count)) +
+  geom_line(group = 1)
+```
+
+```{r}
+nyc_bikes_time %>% 
+  index_by(day) %>% 
+  summarise(count = n()) %>% 
+  ggplot(aes(x = day, y = count)) +
+  geom_line(group = 1)
+```
+

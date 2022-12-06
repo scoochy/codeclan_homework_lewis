@@ -1,0 +1,124 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(tidyverse)
+library(janitor)
+
+project <- read_csv("data/project_management.csv")
+```
+
+```{r}
+project %>% 
+  ggplot(aes(x = estimated_length, y = actual_length)) +
+  geom_point() +
+    geom_abline(
+    intercept = model$coefficients[1],
+    slope = model$coefficients[2],
+    col = "blue"
+  )
+```
+
+```{r}
+project %>% 
+  summarise(cor(estimated_length, actual_length))
+```
+A correlation value of 0.8 shows a strong correlation.
+
+
+```{r}
+model <- lm(formula =  actual_length ~ estimated_length, data = project)
+
+model
+```
+
+An increase of 1 unit of estimated length will increase actual length by 1.223 units.
+
+```{r}
+summary(model)
+```
+This is statistically significant
+
+```{r}
+library(ggfortify)
+plot(model)
+```
+Residuals v fitted, seems to drift but should be ok
+
+
+Normals Q-Q, residuals seem to be normally distributed
+
+Scale-Location, values stay within a positive band so no problems
+
+Residuals vs Leverage, all values within the Cook's distance except 1
+
+
+Ext
+
+
+```{r}
+plot(model) +
+geom_text(aes(label = 1:nrow(project)))
+```
+
+point 5 is an outlier of high leverage therefore influential
+point 18 is an outlier of low leverage so not influential
+
+```{r}
+project2 <- project[-18,]
+```
+
+```{r}
+model2 <- lm(formula = actual_length ~ estimated_length, data = project2)
+
+model2
+```
+
+The intercept and estimated_length coefficient change very little
+
+```{r}
+project2 %>% 
+  ggplot(aes(x = estimated_length, y = actual_length)) +
+  geom_point() +
+  geom_abline(
+    intercept = model2$coefficients[1],
+    slope = model2$coefficients[2],
+    col = "red"
+  ) +
+  geom_abline(
+    intercept = model$coefficients[1],
+    slope = model$coefficients[2],
+    col = "blue"
+  )
+```
+
+```{r}
+project3 <- project[-5, ]
+```
+
+```{r}
+model3 <- lm(formula = actual_length ~ estimated_length, data = project3)
+
+model3
+```
+the intercept coefficient has changed a lot and estimated_length by a significant amount
+
+
+```{r}
+project3 %>% 
+  ggplot(aes(x = estimated_length, y = actual_length)) +
+  geom_point() +
+  geom_abline(
+    intercept = model3$coefficients[1],
+    slope = model3$coefficients[2],
+    col = "red"
+  ) +
+  geom_abline(
+    intercept = model$coefficients[1],
+    slope = model$coefficients[2],
+    col = "blue"
+  )
+```
+
