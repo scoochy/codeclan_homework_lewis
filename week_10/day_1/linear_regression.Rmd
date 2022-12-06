@@ -47,7 +47,6 @@ plot(model)
 ```
 Residuals v fitted, seems to drift but should be ok
 
-
 Normals Q-Q, residuals seem to be normally distributed
 
 Scale-Location, values stay within a positive band so no problems
