@@ -1,0 +1,124 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(tidyverse)
+library(janitor)
+library(GGally)
+
+housing <- read_csv("data/housing_prices.csv")
+```
+
+
+
+ggpairs zooming in too much for all columns
+
+```{r}
+ggpairs(housing, columns = 1:5)
+```
+
+0.934 correlation very strong
+
+```{r}
+housing_trim <- housing %>% 
+  select(-total_bedrooms)
+```
+
+```{r}
+ggpairs(housing_trim)
+```
+
+High correlation between median house price and median income
+
+Strong correlation between median house price and ocean proximity
+
+```{r}
+housing_trim %>% 
+  ggplot(aes(x = median_income , y = median_house_value)) +
+  geom_point()
+```
+
+```{r}
+housing_trim %>% 
+  ggplot(aes(x = ocean_proximity, y = median_house_value)) +
+  geom_col()
+```
+
+4 dummy variables
+<1 hour ocean
+near ocean/bay
+inland
+island
+
+
+```{r}
+lm1 <- lm(median_income ~ median_house_value, housing_trim)
+
+summary(lm1)
+```
+
+Statistically significant and an ok r squared value
+
+```{r}
+library(ggfortify)
+autoplot(lm1)
+```
+Diagnostics have no problems, scale-location shows the values have less heteroskedasticity as median income increases and heavy right tail from QQ plot
+
+```{r}
+housing_trim %>% 
+  distinct(ocean_proximity)
+```
+
+
+```{r}
+housing_dummy <- housing_trim %>% 
+  mutate(location = case_when(
+    ocean_proximity == "<1H OCEAN" ~ "close",
+    ocean_proximity == "INLAND" ~ "inland",
+    ocean_proximity == "ISLAND" ~ "island",
+    TRUE ~ "near"
+  )) %>% 
+  pivot_wider(names_from = location, values_from = location, names_prefix = "location_") %>% 
+  mutate(across(starts_with("location_"), ~if_else(is.na(.x), 0, 1))) %>% 
+  select(-location_island)
+```
+
+
+```{r}
+lm2 <- lm(median_income ~ median_house_value + ocean_proximity, housing_dummy)
+
+summary(lm2)
+```
+
+Statistically significant and ok r squared value
+
+```{r}
+autoplot(lm2)
+```
+
+Diagnostics ok except for some high leverage outliers and less heteroskedasticity as median income increases and right tail skewed from the same outliers
+
+```{r}
+
+lm3 <- lm(median_income ~ median_house_value + ocean_proximity + log(median_income):ocean_proximity, housing_dummy)
+
+summary(lm3)
+```
+
+Much higher r squared value and still statistically significant
+
+```{r}
+autoplot(lm3)
+```
+Diagnostics show that this interaction is not justified
+
+
+```{r}
+housing_trim %>% 
+  ggplot(aes(x = median_income, y = median_house_value, colour = ocean_proximity)) +
+  geom_smooth(method = "lm", se = FALSE)
+```
+
