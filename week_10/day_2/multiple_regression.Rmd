@@ -21,13 +21,54 @@ ggpairs(housing, columns = 1:5)
 
 0.934 correlation very strong
 
+Feature engineering
+
+Use the "raw" dataset to make more meaning with new variables
+
+```{r}
+house <- housing %>% 
+  mutate(bedrooms_per_house = total_bedrooms / households,
+         rooms_per_house = total_rooms / households,
+         people_per_house = population / households,
+         bedrooms_per_person = total_bedrooms / population,
+         rooms_per_person = total_rooms / population,
+         bedrooms_per_room = total_bedrooms / total_rooms,
+         non_bedrooms_per_houe = rooms_per_house - bedrooms_per_house)
+
+```
+
+Could have used long and lats, join to external data for cities in California
+
 ```{r}
 housing_trim <- housing %>% 
   select(-total_bedrooms)
 ```
 
 ```{r}
-ggpairs(housing_trim)
+ggpairs1 <- house %>% 
+  select(median_house_value, 
+         housing_median_age, 
+         median_income,
+         ocean_proximity) %>% 
+  ggpairs()
+
+ggpairs2 <- house %>% 
+  select(median_house_value, 
+         total_rooms,
+         households,
+         population,
+         people_per_house,
+         rooms_per_house, 
+         total_bedrooms) %>% 
+  ggpairs()
+
+ggpairs2
+```
+
+
+```{r}
+housing_trim %>% 
+  ggpairs()
 ```
 
 High correlation between median house price and median income
@@ -43,7 +84,7 @@ housing_trim %>%
 ```{r}
 housing_trim %>% 
   ggplot(aes(x = ocean_proximity, y = median_house_value)) +
-  geom_col()
+  geom_boxplot()
 ```
 
 4 dummy variables
@@ -53,8 +94,10 @@ inland
 island
 
 
+
+
 ```{r}
-lm1 <- lm(median_income ~ median_house_value, housing_trim)
+lm1 <- lm(median_house_value~ median_income, housing_trim)
 
 summary(lm1)
 ```
@@ -65,7 +108,7 @@ Statistically significant and an ok r squared value
 library(ggfortify)
 autoplot(lm1)
 ```
-Diagnostics have no problems, scale-location shows the values have less heteroskedasticity as median income increases and heavy right tail from QQ plot
+Diagnostics have no problems, scale-location shows the values have less heteroskedasticity as median income increases and skewed tails from QQ plot
 
 ```{r}
 housing_trim %>% 
@@ -88,12 +131,14 @@ housing_dummy <- housing_trim %>%
 
 
 ```{r}
-lm2 <- lm(median_income ~ median_house_value + ocean_proximity, housing_dummy)
+lm2 <- lm(median_house_value ~ median_income + ocean_proximity, housing_dummy)
 
 summary(lm2)
 ```
 
-Statistically significant and ok r squared value
+Statistically significant and good r squared value
+
+>How to know about the dummy variable removed?
 
 ```{r}
 autoplot(lm2)
@@ -103,9 +148,11 @@ Diagnostics ok except for some high leverage outliers and less heteroskedasticit
 
 ```{r}
 
-lm3 <- lm(median_income ~ median_house_value + ocean_proximity + log(median_income):ocean_proximity, housing_dummy)
+lm3 <- lm(median_house_value ~ log(median_income) + ocean_proximity + log(median_income):ocean_proximity, housing_dummy)
 
 summary(lm3)
+autoplot(lm3)
+
 ```
 
 Much higher r squared value and still statistically significant
@@ -120,5 +167,10 @@ Diagnostics show that this interaction is not justified
 housing_trim %>% 
   ggplot(aes(x = median_income, y = median_house_value, colour = ocean_proximity)) +
   geom_smooth(method = "lm", se = FALSE)
+```
+
+
+```{r}
+
 ```
 

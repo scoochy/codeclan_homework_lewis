@@ -1,0 +1,161 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(tidyverse)
+library(janitor)
+
+housing_raw <- read_csv("data/kc_house_data.csv") %>% 
+  select(-c(`date`, `id`, `sqft_living15`, `sqft_lot15`, `zipcode`))
+```
+
+```{r}
+housing <- housing_raw %>% 
+  mutate(waterfront = as.logical(waterfront)) %>% 
+  mutate(yr_renovated = as.logical(if_else(yr_renovated > 0, TRUE, FALSE))) %>% 
+  mutate(grade = case_when(
+    grade < 4 ~ "low",
+    grade < 10 ~ "average",
+    TRUE ~ "high"
+  )) %>% 
+  mutate(view = case_when(
+    view == 0 ~ "zero",
+    view == 1 ~ "one",
+    view == 2 ~ "two",
+    view == 3 ~ "three",
+    view == 4 ~ "four"
+  )) %>% 
+  select(-sqft_above)
+  
+  
+```
+
+```{r}
+alias( price ~ ., housing)
+```
+
+
+```{r}
+houses_tidy_numeric <- housing %>%
+  select_if(is.numeric)
+
+houses_tidy_nonnumeric <- housing %>%
+  select_if(function(x) !is.numeric(x))
+
+houses_tidy_nonnumeric$price <- housing$price
+
+library(GGally)
+
+ggpairs(houses_tidy_nonnumeric)
+```
+
+```{r}
+houses_tidy_numeric %>% 
+  ggpairs() %>% 
+  print(progress = F)
+
+houses_tidy_numeric
+```
+
+
+
+Waterfront, grade have large variation
+Bathrooms, sqft_living, view, sqft_basement, floors, bedrooms, latitude
+
+```{r}
+lm1 <- lm(price ~ sqft_living, housing)
+
+summary(lm1)
+```
+```{r}
+autoplot(lm1)
+```
+
+```{r}
+lm1b <- lm(log(price) ~ log(sqft_living), housing)
+
+summary(lm1b)
+```
+
+```{r}
+autoplot(lm1b)
+```
+
+```{r}
+lm2 <- lm(log(price) ~ log(sqft_living) + grade, housing)
+
+summary(lm2)
+```
+```{r}
+autoplot(lm2)
+```
+
+```{r}
+anova(lm1b, lm2)
+```
+
+```{r}
+lm3 <- lm(log(price) ~ log(sqft_living) + grade + bathrooms, housing)
+
+summary(lm3)
+```
+
+```{r}
+autoplot(lm3)
+```
+
+```{r}
+lm4 <- lm(log(price) ~ log(sqft_living) + grade + bathrooms + waterfront, housing)
+
+summary(lm4)
+```
+```{r}
+autoplot(lm4)
+```
+
+```{r}
+lm4b <- lm(log(price) ~ log(sqft_living) + grade + bathrooms + lat, housing)
+
+summary(lm4b)
+```
+
+```{r}
+autoplot(lm4b)
+```
+
+```{r}
+lm5 <- lm(log(price) ~ log(sqft_living) + grade + bathrooms + lat + log(sqft_living):grade, housing)
+
+summary(lm5)
+```
+```{r}
+autoplot(lm5)
+```
+
+
+
+```{r}
+library(modelr)
+
+housing_resid <- housing %>% 
+  add_residuals(lm4c) 
+
+
+housing_resid %>% 
+  select(-c(price, grade, sqft_living, bathrooms, lat)) %>% 
+  ggpairs()
+```
+
+```{r}
+coplot(resid ~ log(sqft_living) | grade,
+       panel = function(x, y, ...){
+         points(x, y)
+         abline(lm(y ~ x), col = "blue")
+       },
+       data = housing_resid, rows = 1)
+```
+
+
+
