@@ -15,11 +15,6 @@ housing_raw <- read_csv("data/kc_house_data.csv") %>%
 housing <- housing_raw %>% 
   mutate(waterfront = as.logical(waterfront)) %>% 
   mutate(yr_renovated = as.logical(if_else(yr_renovated > 0, TRUE, FALSE))) %>% 
-  mutate(grade = case_when(
-    grade < 4 ~ "low",
-    grade < 10 ~ "average",
-    TRUE ~ "high"
-  )) %>% 
   mutate(view = case_when(
     view == 0 ~ "zero",
     view == 1 ~ "one",
@@ -27,6 +22,7 @@ housing <- housing_raw %>%
     view == 3 ~ "three",
     view == 4 ~ "four"
   )) %>% 
+  mutate(grade = as.factor(grade)) %>% 
   select(-sqft_above)
   
   
@@ -70,6 +66,9 @@ lm1 <- lm(price ~ sqft_living, housing)
 summary(lm1)
 ```
 ```{r}
+library(ggplot2)
+library(GGally)
+library(ggfortify)
 autoplot(lm1)
 ```
 
@@ -126,7 +125,7 @@ autoplot(lm4b)
 ```
 
 ```{r}
-lm5 <- lm(log(price) ~ log(sqft_living) + grade + bathrooms + lat + log(sqft_living):grade, housing)
+lm5 <- lm(log(price) ~ log(sqft_living) + grade + waterfront + lat + grade:lat, housing)
 
 summary(lm5)
 ```
@@ -137,15 +136,20 @@ autoplot(lm5)
 
 
 ```{r}
+library(tidyverse)
 library(modelr)
 
 housing_resid <- housing %>% 
-  add_residuals(lm4c) 
+  add_residuals(lm5) 
 
+
+select <- dplyr::select
 
 housing_resid %>% 
   select(-c(price, grade, sqft_living, bathrooms, lat)) %>% 
   ggpairs()
+
+housing_resid
 ```
 
 ```{r}
@@ -158,4 +162,11 @@ coplot(resid ~ log(sqft_living) | grade,
 ```
 
 
+```{r}
+library(relaimpo)
+```
+
+```{r}
+calc.relimp(lm5, method = "lmg", rela = TRUE)
+```
 

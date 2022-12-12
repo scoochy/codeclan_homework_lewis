@@ -1,0 +1,229 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(tidyverse)
+library(janitor)
+
+avocados <- read_csv("data/avocado.csv") %>% 
+  clean_names()
+```
+
+```{r}
+avocados %>% 
+  filter(region %in% c("TotalUS", "West", "WestTexNewMexico"))
+```
+
+```{r}
+avocados %>% 
+  count(type)
+```
+
+
+
+Remove regions since "TotalUS", "West", "WestTexNewMexico" have much larger volumes and poorly defined regions. Too much regions for ggpairs processing time.
+
+```{r}
+library(lubridate)
+avocados_trim <- avocados %>% 
+  mutate(quarter = quarters(as.Date(date))) %>% 
+  mutate(year = as.character(year(ymd(date)))) %>% 
+  mutate(type = as.factor(if_else(type == "organic", 2, 1))) %>% 
+  mutate(prop_small = small_bags / total_bags) %>% 
+  mutate(prop_large = large_bags / total_bags) %>% 
+  mutate(prop_4770 = x4770 / total_volume) %>% 
+  select(-c(x1, date, region))
+```
+
+
+```{r}
+library(GGally)
+library(ggfortify)
+
+avocados_trim %>% 
+  select(average_price, everything()) 
+  #ggpairs()
+```
+
+```{r}
+skimr::skim(avocados_trim)
+```
+
+
+```{r}
+library(bestNormalize)
+total_volume_bn <- bestNormalize(avocados_trim$total_volume)
+
+total_volume_bn
+```
+
+```{r}
+prop_4770_bn <- bestNormalize(avocados_trim$prop_4770)
+
+prop_4770_bn
+```
+
+
+
+```{r}
+prop_large_bn <- bestNormalize(avocados_trim$prop_large)
+
+prop_large_bn
+```
+
+
+
+```{r}
+model1 <- lm(average_price ~ quarter, avocados_trim)
+
+summary(model1)
+```
+```{r}
+avocados_trim %>% 
+  ggplot(aes(x = year, y = average_price, colour = type)) +
+  geom_point()
+```
+
+
+
+```{r}
+autoplot(model1)
+```
+
+
+```{r}
+library(leaps)
+
+regsubsets_forward <- regsubsets(average_price ~ ., data = avocados_trim, nvmax = 10, method = "forward")
+
+summary(regsubsets_forward)
+```
+
+```{r}
+library(modelr)
+avocado_resid <- avocados_trim %>% 
+  add_residuals(model1) %>% 
+  select(-c(average_price, quarter))
+
+avocado_resid %>% 
+  select(resid, everything()) %>% 
+  #ggpairs()
+```
+
+
+
+
+
+```{r}
+model2 <- lm(average_price ~ quarter + type, avocados_trim)
+
+summary(model2)
+```
+
+
+
+```{r}
+autoplot(model2)
+```
+```{r}
+avocado_resid <- avocados_trim %>% 
+  add_residuals(model2) %>% 
+  select(-c(average_price, quarter, type))
+
+#avocado_resid %>% 
+  #select(resid, everything()) %>% 
+  #ggpairs()
+```
+
+
+
+
+```{r}
+model3 <- lm(average_price ~ quarter + type + year, avocados_trim)
+
+summary(model3)
+```
+
+```{r}
+autoplot(model3)
+```
+
+```{r}
+model4 <- lm(average_price ~ quarter + type + year + prop_large_bn$x.t, avocados_trim)
+
+summary(model4)
+```
+
+```{r}
+autoplot(model4)
+```
+
+```{r}
+avocado_resid <- avocados_trim %>% 
+  add_residuals(model4) %>% 
+  select(-c(average_price, quarter, type, year, total_bags, prop_large))
+
+avocado_resid %>% 
+  select(resid, everything()) %>% 
+  ggpairs()
+```
+
+```{r}
+model5 <- lm(average_price ~ quarter + type + year + prop_large_bn$x.t + prop_4770_bn$x.t, avocados_trim)
+
+summary(model5)
+```
+```{r}
+autoplot(model5)
+```
+
+
+
+```{r}
+avocado_resid <- avocados_trim %>% 
+  add_residuals(model5) %>% 
+  select(-c(average_price))
+
+```
+
+```{r}
+coplot(resid ~ prop_large | quarter ,
+       panel = function(x, y, ...){
+         points(x, y)
+         abline(lm(y ~ x), col = "blue")
+       },
+       data = avocado_resid, rows = 1)
+```
+
+
+
+```{r}
+avocado_resid %>%
+  ggplot(aes(x = prop_large_bn$x.t, y = resid, colour = quarter)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE)
+```
+
+```{r}
+model6 <- lm(average_price ~ quarter + type + year + prop_large_bn$x.t + prop_4770_bn$x.t + prop_4770_bn$x.t:type, avocados_trim)
+
+summary(model6)
+```
+
+```{r}
+autoplot(model6)
+```
+```{r}
+model7 <- lm(average_price ~ quarter + type + year + prop_large + prop_4770 + prop_4770:type, avocados_trim)
+
+summary(model7)
+```
+
+
+```{r}
+library(mosaic)
+mosaic::plotModel(model1)
+```
+
