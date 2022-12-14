@@ -1,0 +1,113 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(rpart)
+library(rpart.plot)
+library(tidyverse)
+
+library(tidyverse)
+titanic_set <- read_csv('data/titanic_decision_tree_data.csv')
+
+shuffle_index <- sample(1:nrow(titanic_set))
+
+# shuffle the data so class order isn't in order - need this for training/testing split later on 
+titanic_set <- titanic_set[shuffle_index, ]
+```
+
+```{r}
+titanic_clean <- titanic_set %>%
+  filter(survived %in% c(0,1)) %>%
+    mutate(sex = as.factor(sex), 
+           age_status = as.factor(if_else(age <= 16, "child", "adult")),
+         class = factor(pclass, levels = c(3,2,1), labels = c("Lower", "Middle", "Upper")), 
+           survived_flag = factor(survived, levels = c(0,1), labels = c("No", "Yes")), 
+           port_embarkation = as.factor(embarked)) %>%
+  select(sex, age_status, class, port_embarkation, sib_sp, parch, survived_flag) %>%
+  na.omit()
+```
+
+
+```{r}
+
+titanic_clean %>% 
+  select(survived_flag, everything()) %>% 
+  GGally::ggpairs()
+```
+
+Large differences in sex and class
+
+```{r}
+n_data <- nrow(titanic_clean)
+
+index <- sample(1:n_data, n_data * 0.2)
+
+titanic_test <- slice(titanic_clean, index)
+
+titanic_train <- slice(titanic_clean, -index)
+```
+
+Reasonable sized dataset so 20% is a fair split
+
+```{r}
+titanic_tree <- rpart(
+  formula = survived_flag ~ ., 
+  data = titanic_train, 
+  method = 'class'
+)
+
+rpart.plot(titanic_tree, 
+           yesno = 2, 
+           fallen.leaves = TRUE, 
+           faclen = 6, 
+           digits = 4)
+```
+Sex, class and age_status were important. Best case was female not in lower class. Worst case was male, lower middle class and an adult.
+
+```{r}
+titanic_test_pred <- titanic_test %>% 
+  modelr::add_predictions(titanic_tree, type = "class")
+
+conf_mat <- titanic_test_pred %>% 
+  yardstick::conf_mat(truth = survived_flag, estimate = pred)
+
+conf_mat
+```
+
+Model peformed well except with a significant number of false negatives.
+
+```{r}
+library(ranger)
+library(caret)
+
+control <- trainControl(
+  method = "repeatedcv", 
+  number = 5, 
+  repeats = 10
+)
+
+tune_grid = expand.grid(
+  mtry = 1:6,
+  splitrule = c("gini", "extratrees"),
+  min.node.size = c(1, 3, 5)
+)
+```
+
+```{r}
+rf_tune <- train(
+  survived_flag ~ ., 
+  data = titanic_train, 
+  method = "ranger",
+  metric = "Kappa",
+  num.trees = 1000,
+  importance = "impurity",
+  tuneGrid = tune_grid, 
+  trControl = control
+)
+
+plot(rf_tune)
+rf_tune
+```
+

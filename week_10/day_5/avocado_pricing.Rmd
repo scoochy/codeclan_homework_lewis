@@ -42,8 +42,8 @@ avocados_trim <- avocados %>%
 library(GGally)
 library(ggfortify)
 
-avocados_trim %>% 
-  select(average_price, everything()) 
+#avocados_trim %>% 
+  #select(average_price, everything()) 
   #ggpairs()
 ```
 
@@ -107,8 +107,8 @@ avocado_resid <- avocados_trim %>%
   add_residuals(model1) %>% 
   select(-c(average_price, quarter))
 
-avocado_resid %>% 
-  select(resid, everything()) %>% 
+#avocado_resid %>% 
+  #select(resid, everything()) %>% 
   #ggpairs()
 ```
 
@@ -165,9 +165,9 @@ avocado_resid <- avocados_trim %>%
   add_residuals(model4) %>% 
   select(-c(average_price, quarter, type, year, total_bags, prop_large))
 
-avocado_resid %>% 
-  select(resid, everything()) %>% 
-  ggpairs()
+#avocado_resid %>% 
+  #select(resid, everything()) %>% 
+  #ggpairs()
 ```
 
 ```{r}
@@ -226,4 +226,6 @@ summary(model7)
 library(mosaic)
 mosaic::plotModel(model1)
 ```
+
+To model use add_predictions and ggplot instead 
 
