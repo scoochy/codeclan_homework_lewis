@@ -1,0 +1,79 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(janitor)
+library(broom)
+library(tidyverse)
+library(factoextra)
+
+shopping <- read_csv("data/mall_customers.csv") %>% 
+  clean_names()
+
+head(shopping)
+```
+```{r}
+shopping_subset <- shopping %>% 
+  select(annual_income_k, spending_score_1_100)
+```
+
+```{r}
+shopping_subset %>% 
+  ggplot(aes(x = annual_income_k, y = spending_score_1_100)) +
+  geom_point()
+```
+
+
+```{r}
+fviz_nbclust(shopping_subset, 
+             kmeans, 
+             method = "wss", 
+             nstart = 25)
+```
+k = 3
+
+```{r}
+fviz_nbclust(shopping_subset, 
+             kmeans, 
+             method = "silhouette", 
+             nstart = 25)
+```
+k = 5
+
+```{r}
+fviz_nbclust(shopping_subset, 
+             kmeans, 
+             method = "gap_stat", 
+             nstart = 25)
+```
+
+k = 1
+
+```{r}
+clustered_shopping <- kmeans(shopping_subset, centers = 5, nstart = 25)
+
+clusters <- augment(clustered_shopping, shopping_subset)
+
+library(RColorBrewer)
+myColors <- brewer.pal(5,"Set1")
+names(myColors) <- levels(clusters$group)
+colScale <- scale_colour_manual(name = "grp",values = myColors)
+
+clusters %>% 
+    mutate(group = case_when(
+    .cluster == 1 ~ "Neither",
+    .cluster == 2 ~ "Low Income Low Spend",
+    .cluster == 3 ~ "Low Income High Spend",
+    .cluster == 4 ~ "High Income Low Spend",
+    TRUE ~ "High Income High Spend")) %>% 
+  ggplot(aes(x = annual_income_k, y = spending_score_1_100, colour = group)) +
+  geom_point() +
+  colScale
+
+
+
+
+```
+
