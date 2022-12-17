@@ -1,0 +1,43 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+oj <- read_csv("data/orange_juice.csv") %>% 
+  janitor::clean_names()
+```
+
+
+```{r}
+library(glmulti)
+```
+```{r}
+oj_clean %>% 
+  group_by(weekof_purchase) %>% 
+  summarise(n = sum(purchase_mm) - sum(!purchase_mm)) %>% 
+  ggplot(aes(x = weekof_purchase, y = n)) +
+  geom_col()
+```
+```{r}
+oj_clean %>% 
+  group_by(weekof_purchase) %>% 
+  summarise(n = sum(!purchase_mm)) %>% 
+  ggplot(aes(x = weekof_purchase, y = n)) +
+  geom_col()
+```
+
+```{r}
+alias(purchase_mm ~ ., data = oj_clean)
+```
+
+
+
+```{r}
+oj_clean <- oj %>% 
+  mutate(purchase_mm = if_else(purchase == "MM", TRUE, FALSE)) %>% 
+  mutate(store = if_else(store == 0, 7, store)) %>%
+  mutate(across(.cols = c(weekof_purchase, store_id, special_ch, special_mm, store), ~as.factor(.x))) %>% 
+  select(-c(purchase, store7, disc_mm, disc_ch))
+```
+

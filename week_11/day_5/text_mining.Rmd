@@ -1,0 +1,64 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(tidyverse)
+library(tidytext)
+library(janeaustenr)
+```
+
+```{r}
+austen_books <- austen_books() %>% 
+  unnest_tokens(
+    word, text
+  )
+```
+
+```{r}
+austen_books %>% 
+  filter(book %in% c("Pride & Prejudice", "Sense & Sensibility")) %>% 
+  count(word, sort = TRUE)
+```
+
+```{r}
+austen_books %>% 
+  filter(book %in% c("Pride & Prejudice", "Sense & Sensibility")) %>% 
+  anti_join(stop_words) %>% 
+  count(word, sort = TRUE)
+```
+
+```{r}
+sentiment_pride <- austen_books %>% 
+  filter(book %in% c("Pride & Prejudice")) %>% 
+  anti_join(stop_words) %>% 
+  inner_join(get_sentiments("bing")) %>% 
+  count(word, sort = TRUE) %>% 
+  slice(1:10)
+```
+
+```{r}
+sentiment_sense <- austen_books %>% 
+  filter(book %in% c("Sense & Sensibility")) %>% 
+  anti_join(stop_words) %>% 
+  inner_join(get_sentiments("bing")) %>% 
+  count(word, sort = TRUE) %>% 
+  slice(1:10)
+
+```
+
+```{r}
+sentiment_pride %>% 
+  ggplot(aes(x = word, y = n)) +
+  geom_col() +
+  coord_flip()
+```
+
+```{r}
+sentiment_sense %>% 
+  ggplot(aes(x = word, y = n)) +
+  geom_col() +
+  coord_flip()
+```
+
