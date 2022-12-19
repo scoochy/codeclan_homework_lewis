@@ -4,6 +4,7 @@ output: html_notebook
 ---
 
 ```{r}
+library(tidyverse)
 oj <- read_csv("data/orange_juice.csv") %>% 
   janitor::clean_names()
 ```
@@ -39,5 +40,158 @@ oj_clean <- oj %>%
   mutate(store = if_else(store == 0, 7, store)) %>%
   mutate(across(.cols = c(weekof_purchase, store_id, special_ch, special_mm, store), ~as.factor(.x))) %>% 
   select(-c(purchase, store7, disc_mm, disc_ch))
+```
+
+
+
+```{r}
+glmulti_search_all_mains <- glmulti(
+  purchase_mm ~ ., 
+  data = oj_clean,
+  level = 1,               # No interactions considered, main effects only
+  method = "h",            # Exhaustive approach
+  crit = "bic",            # BIC as criteria
+  confsetsize = 10,        # Keep 10 best models
+  plotty = F, 
+  report = T,              # No plots, but provide interim reports
+  fitfunction = "glm",     # glm function
+  family = binomial(link = "logit")) # binomial family for logistic regression
+
+summary(glmulti_search_all_mains)
+```
+
+```{r}
+glmulti_search_previous_mains_one_pair <- glmulti(
+  purchase_mm ~ ., 
+  data = oj_clean,
+  level = 2,               # Interactions considered
+  method = "h",            # Exhaustive approach
+  crit = "bic",            # BIC as criteria
+  confsetsize = 10,        # Keep 10 best models
+  marginality = TRUE,      # consider pairs only if both main effects in model
+  minsize = 6,             # minsize, maxsize and marginality here force 
+  maxsize = 6,             # inclusion of a single pair beyond the five main effects
+  plotty = F, 
+  report = T,              # No plots, but provide interim reports
+  fitfunction = "glm",     # glm function
+  family = binomial(link = "logit")) # binomial family for logistic regression
+
+summary(glmulti_search_previous_mains_one_pair)
+```
+
+```{r}
+model <- glm(purchase_mm~1+price_mm+loyal_ch+sale_price_mm+sale_price_ch+price_diff+pct_disc_mm, family = binomial, data = oj_clean)
+
+summary(model)
+
+```
+
+```{r}
+library(pROC)
+library(modelr)
+
+oj_model1 <- oj_clean %>% 
+  add_predictions(model, type = "response")
+
+roc_object1 <- oj_model1 %>% 
+  roc(response = purchase_mm, predictor = pred)
+  
+```
+```{r}
+roc_curve <- ggroc(
+  roc_object1,
+  legacy.axes = TRUE) +
+  coord_fixed()
+
+roc_curve
+
+auc(roc_object1)
+```
+
+```{r}
+glmulti_search_previous_mains_one_pair <- glmulti(
+  purchase_mm~1+price_mm+loyal_ch+sale_price_mm+sale_price_ch+price_diff+pct_disc_mm, 
+  data = oj_clean,
+  level = 2,               # Interactions considered
+  method = "h",            # Exhaustive approach
+  crit = "bic",            # BIC as criteria
+  confsetsize = 10,        # Keep 10 best models
+  marginality = TRUE,      # consider pairs only if both main effects in model
+  minsize = 7,             # minsize, maxsize and marginality here force 
+  maxsize = 7,             # inclusion of a single pair beyond the five main effects
+  plotty = F, 
+  report = T,              # No plots, but provide interim reports
+  fitfunction = "glm",     # glm function
+  family = binomial(link = "logit")) # binomial family for logistic regression
+
+summary(glmulti_search_previous_mains_one_pair)
+```
+
+```{r}
+model2 <- glm(purchase_mm ~ 1 + price_mm + loyal_ch + sale_price_mm + sale_price_ch + price_diff + pct_disc_mm + price_diff:loyal_ch, family = binomial, data = oj_clean)
+```
+
+```{r}
+oj_model2 <- oj_clean %>% 
+  add_predictions(model, type = "response")
+
+roc_object2 <- oj_model2 %>% 
+  roc(response = purchase_mm, predictor = pred)
+```
+
+```{r}
+roc_curve2 <- ggroc(
+  roc_object2,
+  legacy.axes = TRUE) +
+  coord_fixed()
+
+roc_curve2
+
+auc(roc_object2)
+```
+
+```{r}
+purchase_mm ~ 1 + price_mm + loyal_ch + sale_price_mm + sale_price_ch + price_diff + pct_disc_mm + price_diff:loyal_ch
+```
+
+```{r}
+glmulti_search_previous_mains_one_pair <- glmulti(
+  purchase_mm~1+price_mm+loyal_ch+sale_price_mm+sale_price_ch+price_diff+pct_disc_mm, 
+  data = oj_clean,
+  level = 2,               # Interactions considered
+  method = "h",            # Exhaustive approach
+  crit = "bic",            # BIC as criteria
+  confsetsize = 10,        # Keep 10 best models
+  marginality = TRUE,      # consider pairs only if both main effects in model
+  minsize = 10,             # minsize, maxsize and marginality here force 
+  maxsize = 10,             # inclusion of a single pair beyond the five main effects
+  plotty = F, 
+  report = T,              # No plots, but provide interim reports
+  fitfunction = "glm",     # glm function
+  family = binomial(link = "logit")) # binomial family for logistic regression
+
+summary(glmulti_search_previous_mains_one_pair)
+```
+
+```{r}
+model3 <- glm(purchase_mm ~ 1 + price_mm + loyal_ch + sale_price_mm + sale_price_ch + price_diff + pct_disc_mm + loyal_ch:price_mm + sale_price_mm:loyal_ch + sale_price_ch:loyal_ch + price_diff:loyal_ch, family = binomial, data = oj_clean)
+```
+
+```{r}
+oj_model3 <- oj_clean %>% 
+  add_predictions(model, type = "response")
+
+roc_object3 <- oj_model3 %>% 
+  roc(response = purchase_mm, predictor = pred)
+```
+```{r}
+roc_curve3 <- ggroc(
+  roc_object3,
+  legacy.axes = TRUE) +
+  coord_fixed()
+
+roc_curve3
+
+auc(roc_object3)
 ```
 
