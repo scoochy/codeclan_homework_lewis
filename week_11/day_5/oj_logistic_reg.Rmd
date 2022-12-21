@@ -195,3 +195,18 @@ roc_curve3
 auc(roc_object3)
 ```
 
+```{r}
+library(caret)
+
+# set up options for train function below
+cv_10_fold <- trainControl(method = "cv", # cross-validation
+                           number = 10, # 10-fold
+                           savePredictions = TRUE) # save all predictions
+
+model_cv <- train(purchase_mm ~ 1 + price_mm + loyal_ch + sale_price_mm + sale_price_ch + price_diff + pct_disc_mm + loyal_ch:price_mm + sale_price_mm:loyal_ch + sale_price_ch:loyal_ch + price_diff:loyal_ch, 
+               data = oj_clean,
+               trControl = cv_10_fold, # use options defined above
+               method = 'glm',
+               family = binomial)
+```
+
